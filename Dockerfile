@@ -1,15 +1,11 @@
-FROM node:slim
+FROM node:21
 
-RUN apt-get update \
- && apt-get install
+WORKDIR /api
 
-#WORKDIR /image-api
-WORKDIR /usr/src/app
-#COPY package.json /image-api/package.json
-#COPY package-lock.json /image-api/package-lock.json
 COPY package*.json ./
 
 RUN npm install
+RUN npm install -g nodemon
 
 EXPOSE 3000
 
