@@ -18,7 +18,7 @@ const resizeImage = async (image, width, height) => {
 
     return await sharp(image)
         .resize(width, height)
-        .toBuffer();
+        .toFile("./converted/" + width + "x" + height + ".jpg");
 }
 
 const convertImage = async (image, format) => {
@@ -27,14 +27,18 @@ const convertImage = async (image, format) => {
         .toBuffer();
 }
 
-const makeImageSquare = async (image) => {
+const makeImageSquare = async (image, name) => {
     return await sharp(image)
-        .resize({
-            fit: sharp.fit.inside,
-            width: 1000,
-            height: 1000
+        .resize(1000, 1000, {
+            fit: "contain",
+            background: {
+                r: 255,
+                g: 255,
+                b: 255,
+                alpha: 1
+            },
         })
-        .toBuffer();
+        .toFile("./converted/" + name + "_squared.jpg");
 }
 
 const overlaySVG = async (image, svg, title = "", description = "", keywords = "") => {
