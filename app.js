@@ -58,26 +58,38 @@ app.post('/api/v1/resize-image', async (req, res, next) => {
 /**
  * converts an image to a different format
  */
-app.post('/api/v1/convert-image', (req, res) => {
-    if (!req.query.image) {
+app.post('/api/v1/convert-image', (req, res, next) => {
+    if (!req.files.image) {
         const err = new Error('Required query param image is missing');
         err.status = 400;
         next(err);
     }
-    
-    const image = req.body.image;
 
     let format = "avif";
     
     if (req.query.format) {
         format = req.query.format;
     }
+
+    const image = req.files.image;
+    if (!validateImage(image)) {
+        const err = new Error('Invalid image file');
+        err.status = 400;
+        next(err);
+    }
+
+    image.mv('./upload/' + image.name, async function() {
+        await imageManager.resizeImage('./upload/' + image.name, format, image.name);
+        res.send({
+            image: "saved",
+        });
+    });
 });
 
 /**
  * makes an image square by adding white background
  */
-app.post('/api/v1/make-image-square', async (req, res) => {
+app.post('/api/v1/make-image-square', async (req, res, next) => {
     if (!req.files.image) {
         const err = new Error('Required query param image is missing');
         err.status = 400;
@@ -86,7 +98,7 @@ app.post('/api/v1/make-image-square', async (req, res) => {
     }
     
     const image = req.files.image;
-    if(!validateImage(image)) {
+    if (!validateImage(image)) {
         const err = new Error('Invalid image file');
         err.status = 400;
         next(err);
@@ -103,30 +115,90 @@ app.post('/api/v1/make-image-square', async (req, res) => {
     });
 });
 
-app.post('/api/v1/overlay-svg', (req, res) => {
+/**
+ * overlays an svg on top of an image;
+ * by using the x and y coordinates, the svg can be moved around
+ */
+app.post('/api/v1/overlay-svg', (req, res, next) => {
     if (!req.query.image || !req.query.svg) {
         const err = new Error('Required query params are missing');
         err.status = 400;
         next(err);
     }
-    
-    const image = req.body.image;
-    const svg = req.body.svg;
+
+    const image = req.query.image;
+    if (!validateImage(image)) {
+        const err = new Error('Invalid image file');
+        err.status = 400;
+        next(err);
+    }
+
+    const svg = req.query.svg;
+    if (!validateImage(svg)) {
+        const err = new Error('Invalid image file');
+        err.status = 400;
+        next(err);
+    }
+
+    const title = req.query.title ? req.query.title : "";
+    const description = req.query.description ? req.query.description : "";
+    const keywords = req.query.keywords ? req.query.keywords : "";
+
+    const x = req.query.x ? req.query.x : 0;
+    const y = req.query.y ? req.query.y : 0;
+
+    const widthSvg = req.query.widthSvg ? req.query.widthSvg : 1000;
+    const heightSvg = req.query.heightSvg ? req.query.heightSvg : 1000;
+    const rotate = req.query.rotate ? req.query.rotate : 0;
+
+    const width = req.query.width ? req.query.width : 1000;
+    const height = req.query.height ? req.query.height : 1000;
+
+    image.mv('./upload/' + image.name, async function() {
+        svg.mv('./upload/' + svg.name, async function() {
+            const resultimage = await imageManager.overlaySVG('./upload/' + image.name, './upload/' + svg.name, title, description, keywords, x, y, widthSvg, heightSvg, rotate, width, height);
+            res.send({
+                image: "saved",
+            });
+        });
+    });
 });
 
 /**
  * makes the image square and puts the svg on top of it
  */
-app.post('/api/v1/combine-operations', (req, res) => {
-    if (!req.query.image || !req.query.width || !req.query.format) {
+app.post('/api/v1/combine-operations', (req, res, next) => {
+    if (!req.files.image || !req.query.width || !req.query.format || !req.files.svg) {
         const err = new Error('Required query params are missing');
         err.status = 400;
         next(err);
     }
     
-    const image = req.body.image;
+    const image = req.files.image;
+    const svg = req.files.svg;
     const width = req.body.width;
     const format = req.body.format;
+
+    if (!validateImage(image)) {
+        const err = new Error('Invalid image file');
+        err.status = 400;
+        next(err);
+    }
+
+    if (!validateImage(svg)) {
+        const err = new Error('Invalid image file');
+        err.status = 400;
+        next(err);
+    }
+
+    image.mv('./upload/' + image.name, async function() {
+        svg.mv('./upload/' + svg.name, async function() {
+            const resultimage = await imageManager.combineOperations('./upload/' + image.name, './upload/' + svg.name);
+            res.send({
+                image: "saved",
+            });
+        });
+    });
 });
 
 /**
