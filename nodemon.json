@@ -1,4 +1,4 @@
 {
-    "ignore": ["node_modules", "api/app.js"]
+    "ignore": ["node_modules", "bower_components", "public", "views"]
 }
   
