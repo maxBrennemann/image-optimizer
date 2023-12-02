@@ -2,6 +2,7 @@ const express = require("express");
 const fileUpload = require('express-fileupload');
 const cors = require("cors");
 const imageManager = require("./image-manipulation/sharp-manager");
+const { optimize } = require('svgo');
 
 const PORT = process.env.PORT || 3000;
 
@@ -198,6 +199,28 @@ app.post('/api/v1/combine-operations', (req, res, next) => {
                 image: "saved",
             });
         });
+    });
+});
+
+/**
+ * optimizes an svg by using the svgo library
+ */
+app.get('/api/v1/optimize-svg', async (req, res, next) => {
+    if (!req.query.svg) {
+        const err = new Error('Required query param image is missing');
+        err.status = 400;
+        next(err);
+        return;
+    }    
+
+    const result = optimize(req.query.svg, {
+        path: 'path-to.svg', // recommended
+        multipass: true // all other config fields are available here
+    });
+
+    const optimizedSvgString = result.data;
+    res.send({
+        svg: optimizedSvgString,
     });
 });
 
