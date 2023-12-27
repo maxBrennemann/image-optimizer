@@ -127,12 +127,19 @@ const overlaySVG = async (image, svg, title = "", description = "", keywords = "
  * @param {*} operations 
  * @returns 
  */
-const combineOperations = async (image, operations) => {
-    let sharpImage = sharp(image);
-    operations.forEach(operation => {
-        sharpImage = sharpImage[operation.name](operation.options);
-    });
-    return await sharpImage.toBuffer();
+const combineOperations = async (image, svg, title) => {
+    return await sharp(image)
+        .composite([{
+            input: svg,
+            blend: 'over',
+            top: 0,
+            left: 0,
+            width: 1000,
+            height: 1000,
+        }])
+        .resize(1000, 1000)
+        //.toBuffer()
+        .toFile("./overlayed/" + title + ".jpg");
 }
 
 module.exports = {

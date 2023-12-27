@@ -169,7 +169,8 @@ app.post('/api/v1/overlay-svg', (req, res, next) => {
  * makes the image square and puts the svg on top of it
  */
 app.post('/api/v1/combine-operations', (req, res, next) => {
-    if (!req.files.image || !req.query.width || !req.query.format || !req.files.svg) {
+    //console.log(req.files);
+    if (!req.files.image || !req.files.svg) {
         const err = new Error('Required query params are missing');
         err.status = 400;
         next(err);
@@ -194,12 +195,12 @@ app.post('/api/v1/combine-operations', (req, res, next) => {
 
     image.mv('./upload/' + image.name, async function() {
         svg.mv('./upload/' + svg.name, async function() {
-            const resultimage = await imageManager.combineOperations('./upload/' + image.name, './upload/' + svg.name);
+            const resultimage = await imageManager.combineOperations('./upload/' + image.name, './upload/' + svg.name, image.name);
             res.send({
                 image: "saved",
             });
         });
-    });
+    }); 
 });
 
 /**
@@ -242,12 +243,12 @@ function validateImage(image) {
 }
 
 function checkMimeType (mimetype) {
-    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/tiff', 'image/psd', 'application/pdf'];
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/tiff', 'image/psd', 'application/pdf', 'image/svg+xml'];
     return allowedMimeTypes.includes(mimetype);
 }
 
 function getFileExtension (filename) {
-    const allowedFileExt = ['JPEG', 'JPG', 'PNG', 'GIF', 'TIFF', 'PSD', 'PDF'];
+    const allowedFileExt = ['JPEG', 'JPG', 'PNG', 'GIF', 'TIFF', 'PSD', 'PDF', 'SVG'];
     const fileExt = /[^.]+$/.exec(filename);
     return allowedFileExt.includes(fileExt[0].toUpperCase());
 }
